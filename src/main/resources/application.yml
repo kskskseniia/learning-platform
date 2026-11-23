@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: learning-platform
+  config:
+    import: optional:file:.env[.properties]
+  jpa:
+    open-in-view: false
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
