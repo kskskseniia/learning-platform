@@ -19,6 +19,11 @@ public class GlobalExceptionHandler {
                 .body(new ApiError(exception.getMessage()));
     }
 
+    @ExceptionHandler(InvalidResourceStateException.class)
+    public ResponseEntity<ApiError> handleInvalidState(InvalidResourceStateException exception) {
+        return ResponseEntity.badRequest().body(new ApiError(exception.getMessage()));
+    }
+
     @ExceptionHandler({DuplicateResourceException.class, DataIntegrityViolationException.class})
     public ResponseEntity<ApiError> handleConflict(RuntimeException exception) {
         String message = exception instanceof DuplicateResourceException

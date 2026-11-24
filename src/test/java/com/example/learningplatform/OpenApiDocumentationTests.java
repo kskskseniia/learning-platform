@@ -37,7 +37,7 @@ class OpenApiDocumentationTests {
     }
 
     @Test
-    void documentsEveryCatalogOperation() throws Exception {
+    void documentsEveryApiOperation() throws Exception {
         String document = mockMvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())
                 .andReturn()
@@ -54,7 +54,10 @@ class OpenApiDocumentationTests {
                 "/api/categories",
                 "/api/categories/{id}",
                 "/api/tags",
-                "/api/tags/{id}");
+                "/api/tags/{id}",
+                "/api/courses",
+                "/api/courses/{id}",
+                "/api/course-tags");
         Set<String> httpMethods = Set.of("get", "post", "put", "delete");
         List<Map<String, Object>> operations = catalogPaths.stream()
                 .map(paths::get)
@@ -64,7 +67,7 @@ class OpenApiDocumentationTests {
                 .toList();
 
         assertThat(paths).containsKeys(catalogPaths.toArray(String[]::new));
-        assertThat(operations).hasSize(20);
+        assertThat(operations).hasSize(26);
         assertThat(operations).allSatisfy(operation -> {
             assertThat(operation.get("summary")).as("operation summary").isNotNull();
             assertThat(operation.get("description")).as("operation description").isNotNull();
@@ -86,7 +89,9 @@ class OpenApiDocumentationTests {
                 "$.paths['/api/categories'].post.responses['409'].content['application/json'].schema['$ref']",
                 "$.paths['/api/categories/{id}'].put.responses['409'].content['application/json'].schema['$ref']",
                 "$.paths['/api/tags'].post.responses['409'].content['application/json'].schema['$ref']",
-                "$.paths['/api/tags/{id}'].put.responses['409'].content['application/json'].schema['$ref']");
+                "$.paths['/api/tags/{id}'].put.responses['409'].content['application/json'].schema['$ref']",
+                "$.paths['/api/courses'].post.responses['409'].content['application/json'].schema['$ref']",
+                "$.paths['/api/courses/{id}'].put.responses['409'].content['application/json'].schema['$ref']");
 
         assertThat(conflictSchemas)
                 .allSatisfy(path -> assertThat((String) JsonPath.parse(document).read(path))
@@ -107,5 +112,41 @@ class OpenApiDocumentationTests {
         assertThat((String) JsonPath.parse(document).read(
                 "$.paths['/api/profiles/{id}'].put.requestBody.content['application/json'].schema['$ref']"))
                 .isEqualTo("#/components/schemas/ProfileUpdateRequest");
+    }
+
+    @Test
+    void documentsCourseRequestAndResponseSchemas() throws Exception {
+        String document = mockMvc.perform(get("/v3/api-docs"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString(StandardCharsets.UTF_8);
+
+        assertThat((String) JsonPath.parse(document).read(
+                "$.paths['/api/courses'].post.requestBody.content['application/json'].schema['$ref']"))
+                .isEqualTo("#/components/schemas/CourseRequest");
+        assertThat((String) JsonPath.parse(document).read(
+                "$.paths['/api/courses'].post.responses['201'].content['*/*'].schema['$ref']"))
+                .isEqualTo("#/components/schemas/CourseResponse");
+        assertThat((String) JsonPath.parse(document).read(
+                "$.paths['/api/courses/{id}'].get.responses['404'].content['application/json'].schema['$ref']"))
+                .isEqualTo("#/components/schemas/ApiError");
+
+        List<String> expectedBadRequestSchemas = List.of(
+                "#/components/schemas/ApiError",
+                "#/components/schemas/ValidationError");
+        assertThat((List<String>) JsonPath.parse(document).read(
+                "$.paths['/api/courses'].post.responses['400'].content['application/json'].schema.oneOf[*]['$ref']"))
+                .containsExactlyInAnyOrderElementsOf(expectedBadRequestSchemas);
+        assertThat((List<String>) JsonPath.parse(document).read(
+                "$.paths['/api/courses/{id}'].put.responses['400'].content['application/json'].schema.oneOf[*]['$ref']"))
+                .containsExactlyInAnyOrderElementsOf(expectedBadRequestSchemas);
+        assertThat((List<String>) JsonPath.parse(document).read(
+                "$.paths['/api/users/{id}'].put.responses['400'].content['application/json'].schema.oneOf[*]['$ref']"))
+                .containsExactlyInAnyOrderElementsOf(expectedBadRequestSchemas);
+
+        assertThat((String) JsonPath.parse(document).read(
+                "$.paths['/api/course-tags'].get.responses['200'].content['*/*'].schema.items['$ref']"))
+                .isEqualTo("#/components/schemas/CourseTagResponse");
     }
 }

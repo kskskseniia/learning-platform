@@ -2,8 +2,12 @@ package com.example.learningplatform.controller;
 
 import com.example.learningplatform.dto.UserRequest;
 import com.example.learningplatform.dto.UserResponse;
+import com.example.learningplatform.exception.ApiError;
+import com.example.learningplatform.exception.ValidationError;
 import com.example.learningplatform.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -64,7 +68,14 @@ public class UserController {
     @Operation(summary = "Обновить пользователя", description = "Полностью обновляет поля пользователя")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Пользователь обновлён"),
-        @ApiResponse(responseCode = "400", description = "Некорректные данные"),
+        @ApiResponse(
+                responseCode = "400",
+                description = "Некорректные данные или недопустимая смена роли",
+                content = @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(oneOf = {
+                            ValidationError.class, ApiError.class
+                        }))),
         @ApiResponse(responseCode = "404", description = "Пользователь не найден"),
         @ApiResponse(responseCode = "409", description = "Email уже используется")
     })

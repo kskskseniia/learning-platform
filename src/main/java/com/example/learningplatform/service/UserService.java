@@ -2,9 +2,12 @@ package com.example.learningplatform.service;
 
 import com.example.learningplatform.dto.UserRequest;
 import com.example.learningplatform.dto.UserResponse;
+import com.example.learningplatform.entity.Role;
 import com.example.learningplatform.entity.User;
 import com.example.learningplatform.exception.DuplicateResourceException;
+import com.example.learningplatform.exception.InvalidResourceStateException;
 import com.example.learningplatform.exception.ResourceNotFoundException;
+import com.example.learningplatform.repository.CourseRepository;
 import com.example.learningplatform.repository.ProfileRepository;
 import com.example.learningplatform.repository.UserRepository;
 import java.util.List;
@@ -17,10 +20,15 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final ProfileRepository profileRepository;
+    private final CourseRepository courseRepository;
 
-    public UserService(UserRepository userRepository, ProfileRepository profileRepository) {
+    public UserService(
+            UserRepository userRepository,
+            ProfileRepository profileRepository,
+            CourseRepository courseRepository) {
         this.userRepository = userRepository;
         this.profileRepository = profileRepository;
+        this.courseRepository = courseRepository;
     }
 
     public List<UserResponse> findAll() {
@@ -42,6 +50,12 @@ public class UserService {
     public UserResponse update(Integer id, UserRequest request) {
         User user = getUser(id);
         ensureEmailAvailable(request.email(), id);
+        if (user.getRole() == Role.TEACHER
+                && request.role() != Role.TEACHER
+                && courseRepository.existsByTeacher_Id(id)) {
+            throw new InvalidResourceStateException(
+                    "Cannot change role of a teacher assigned to courses");
+        }
         user.setName(request.name());
         user.setEmail(request.email());
         user.setRole(request.role());
