@@ -9,6 +9,7 @@ import com.example.learningplatform.exception.InvalidResourceStateException;
 import com.example.learningplatform.exception.ResourceInUseException;
 import com.example.learningplatform.exception.ResourceNotFoundException;
 import com.example.learningplatform.repository.CourseRepository;
+import com.example.learningplatform.repository.CourseReviewRepository;
 import com.example.learningplatform.repository.EnrollmentRepository;
 import com.example.learningplatform.repository.ProfileRepository;
 import com.example.learningplatform.repository.UserRepository;
@@ -24,16 +25,19 @@ public class UserService {
     private final ProfileRepository profileRepository;
     private final CourseRepository courseRepository;
     private final EnrollmentRepository enrollmentRepository;
+    private final CourseReviewRepository courseReviewRepository;
 
     public UserService(
             UserRepository userRepository,
             ProfileRepository profileRepository,
             CourseRepository courseRepository,
-            EnrollmentRepository enrollmentRepository) {
+            EnrollmentRepository enrollmentRepository,
+            CourseReviewRepository courseReviewRepository) {
         this.userRepository = userRepository;
         this.profileRepository = profileRepository;
         this.courseRepository = courseRepository;
         this.enrollmentRepository = enrollmentRepository;
+        this.courseReviewRepository = courseReviewRepository;
     }
 
     public List<UserResponse> findAll() {
@@ -64,9 +68,10 @@ public class UserService {
         }
         if (user.getRole() == Role.STUDENT
                 && request.role() != Role.STUDENT
-                && enrollmentRepository.existsByStudent_Id(id)) {
+                && (enrollmentRepository.existsByStudent_Id(id)
+                        || courseReviewRepository.existsByStudent_Id(id))) {
             throw new ResourceInUseException(
-                    "Cannot change role of a student enrolled in courses");
+                    "Cannot change role of a student with enrollments or course reviews");
         }
         user.setName(request.name());
         user.setEmail(request.email());

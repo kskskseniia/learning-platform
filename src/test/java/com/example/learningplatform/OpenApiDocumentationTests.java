@@ -60,7 +60,9 @@ class OpenApiDocumentationTests {
                 "/api/course-tags",
                 "/api/enrollments",
                 "/api/enrollments/{id}",
-                "/api/enrollments/{id}/status");
+                "/api/enrollments/{id}/status",
+                "/api/course-reviews",
+                "/api/course-reviews/{id}");
         Set<String> httpMethods = Set.of("get", "post", "put", "delete");
         List<Map<String, Object>> operations = catalogPaths.stream()
                 .map(paths::get)
@@ -70,7 +72,7 @@ class OpenApiDocumentationTests {
                 .toList();
 
         assertThat(paths).containsKeys(catalogPaths.toArray(String[]::new));
-        assertThat(operations).hasSize(31);
+        assertThat(operations).hasSize(36);
         assertThat(operations).allSatisfy(operation -> {
             assertThat(operation.get("summary")).as("operation summary").isNotNull();
             assertThat(operation.get("description")).as("operation description").isNotNull();
@@ -148,6 +150,25 @@ class OpenApiDocumentationTests {
         assertThat((List<String>) JsonPath.parse(document).read(
                 "$.paths['/api/users/{id}'].put.responses['400'].content['application/json'].schema.oneOf[*]['$ref']"))
                 .containsExactlyInAnyOrderElementsOf(expectedBadRequestSchemas);
+        assertThat((List<String>) JsonPath.parse(document).read(
+                "$.paths['/api/course-reviews/{id}'].put.responses['400'].content['application/json'].schema.oneOf[*]['$ref']"))
+                .containsExactlyInAnyOrderElementsOf(expectedBadRequestSchemas);
+
+        assertThat((String) JsonPath.parse(document).read(
+                "$.paths['/api/course-reviews'].post.requestBody.content['application/json'].schema['$ref']"))
+                .isEqualTo("#/components/schemas/CourseReviewRequest");
+        assertThat((String) JsonPath.parse(document).read(
+                "$.paths['/api/course-reviews/{id}'].put.requestBody.content['application/json'].schema['$ref']"))
+                .isEqualTo("#/components/schemas/CourseReviewUpdateRequest");
+        assertThat((String) JsonPath.parse(document).read(
+                "$.paths['/api/course-reviews'].post.responses['201'].content['*/*'].schema['$ref']"))
+                .isEqualTo("#/components/schemas/CourseReviewResponse");
+        assertThat((String) JsonPath.parse(document).read(
+                "$.paths['/api/course-reviews'].post.responses['409'].content['application/json'].schema['$ref']"))
+                .isEqualTo("#/components/schemas/ApiError");
+        assertThat((String) JsonPath.parse(document).read(
+                "$.paths['/api/course-reviews/{id}'].put.responses['409'].content['application/json'].schema['$ref']"))
+                .isEqualTo("#/components/schemas/ApiError");
 
         assertThat((String) JsonPath.parse(document).read(
                 "$.paths['/api/course-tags'].get.responses['200'].content['*/*'].schema.items['$ref']"))

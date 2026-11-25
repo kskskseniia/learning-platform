@@ -79,7 +79,7 @@ public class UserController {
         @ApiResponse(responseCode = "404", description = "Пользователь не найден"),
         @ApiResponse(
                 responseCode = "409",
-                description = "Email уже используется или студент записан на курс",
+                description = "Email уже используется или у студента есть записи на курсы или отзывы",
                 content = @Content(
                         mediaType = "application/json",
                         schema = @Schema(implementation = ApiError.class)))
