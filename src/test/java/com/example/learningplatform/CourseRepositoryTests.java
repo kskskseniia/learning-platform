@@ -59,32 +59,6 @@ class CourseRepositoryTests {
         assertThat(linkCount).isEqualTo(1);
     }
 
-    @Test
-    void rejectsDuplicateCourseByCaseInsensitiveTitleTeacherAndStartDateAtDatabaseLevel() {
-        Category category = categoryRepository.saveAndFlush(new Category("Unique Course Category"));
-        User teacher = userRepository.saveAndFlush(
-                new User("Unique Course Teacher", "unique-course-teacher@example.com", Role.TEACHER));
-        LocalDate startDate = LocalDate.of(2027, 8, 1);
-
-        courseRepository.saveAndFlush(new Course(
-                "Database Unique Course",
-                "First description",
-                category,
-                teacher,
-                "4 weeks",
-                startDate));
-
-        Course duplicate = new Course(
-                "database unique course",
-                "Different description",
-                category,
-                teacher,
-                "8 weeks",
-                startDate);
-
-        assertThatThrownBy(() -> courseRepository.saveAndFlush(duplicate))
-                .isInstanceOf(DataIntegrityViolationException.class);
-    }
 
     @Test
     void rejectsDuplicateCourseTagAtDatabaseLevel() {

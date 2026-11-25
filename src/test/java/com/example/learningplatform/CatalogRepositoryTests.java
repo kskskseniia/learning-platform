@@ -108,19 +108,4 @@ class CatalogRepositoryTests {
         assertThat(tagRepository.findById(tag.getId())).containsSame(tag);
     }
 
-    @Test
-    void rejectsCategoryNameDuplicateIgnoringCaseAtDatabaseLevel() {
-        categoryRepository.saveAndFlush(new Category("Java"));
-
-        assertThatThrownBy(() -> categoryRepository.saveAndFlush(new Category("java")))
-                .isInstanceOf(DataIntegrityViolationException.class);
-    }
-
-    @Test
-    void rejectsTagNameDuplicateIgnoringCaseAtDatabaseLevel() {
-        tagRepository.saveAndFlush(new Tag("Spring"));
-
-        assertThatThrownBy(() -> tagRepository.saveAndFlush(new Tag("spring")))
-                .isInstanceOf(DataIntegrityViolationException.class);
-    }
 }

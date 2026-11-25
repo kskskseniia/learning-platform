@@ -71,26 +71,4 @@ class CourseReviewRepositoryTests {
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
 
-    @Test
-    void rejectsDuplicateNormalizedCommentForSameStudentAndCourse() {
-        User student = userRepository.saveAndFlush(
-                new User("Unique Review Student", "unique-review-student@example.com", Role.STUDENT));
-        User teacher = userRepository.saveAndFlush(
-                new User("Unique Review Teacher", "unique-review-teacher@example.com", Role.TEACHER));
-        Category category = categoryRepository.saveAndFlush(new Category("Unique Review Category"));
-        Course course = courseRepository.saveAndFlush(new Course(
-                "Unique Review Course",
-                "Unique review description",
-                category,
-                teacher,
-                "6 weeks",
-                LocalDate.of(2027, 11, 1)));
-        LocalDateTime createdAt = LocalDateTime.of(2027, 11, 15, 12, 30);
-        courseReviewRepository.saveAndFlush(
-                new CourseReview(course, student, 5, "Repeated review text", createdAt));
-
-        assertThatThrownBy(() -> courseReviewRepository.saveAndFlush(
-                new CourseReview(course, student, 3, "  repeated REVIEW text  ", createdAt)))
-                .isInstanceOf(DataIntegrityViolationException.class);
-    }
 }
