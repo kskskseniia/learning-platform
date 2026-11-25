@@ -57,7 +57,10 @@ class OpenApiDocumentationTests {
                 "/api/tags/{id}",
                 "/api/courses",
                 "/api/courses/{id}",
-                "/api/course-tags");
+                "/api/course-tags",
+                "/api/enrollments",
+                "/api/enrollments/{id}",
+                "/api/enrollments/{id}/status");
         Set<String> httpMethods = Set.of("get", "post", "put", "delete");
         List<Map<String, Object>> operations = catalogPaths.stream()
                 .map(paths::get)
@@ -67,7 +70,7 @@ class OpenApiDocumentationTests {
                 .toList();
 
         assertThat(paths).containsKeys(catalogPaths.toArray(String[]::new));
-        assertThat(operations).hasSize(26);
+        assertThat(operations).hasSize(31);
         assertThat(operations).allSatisfy(operation -> {
             assertThat(operation.get("summary")).as("operation summary").isNotNull();
             assertThat(operation.get("description")).as("operation description").isNotNull();
@@ -86,6 +89,7 @@ class OpenApiDocumentationTests {
                 .getContentAsString(StandardCharsets.UTF_8);
 
         List<String> conflictSchemas = List.of(
+                "$.paths['/api/users/{id}'].put.responses['409'].content['application/json'].schema['$ref']",
                 "$.paths['/api/categories'].post.responses['409'].content['application/json'].schema['$ref']",
                 "$.paths['/api/categories/{id}'].put.responses['409'].content['application/json'].schema['$ref']",
                 "$.paths['/api/tags'].post.responses['409'].content['application/json'].schema['$ref']",

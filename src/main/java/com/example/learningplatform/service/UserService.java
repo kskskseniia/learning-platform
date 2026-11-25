@@ -6,8 +6,10 @@ import com.example.learningplatform.entity.Role;
 import com.example.learningplatform.entity.User;
 import com.example.learningplatform.exception.DuplicateResourceException;
 import com.example.learningplatform.exception.InvalidResourceStateException;
+import com.example.learningplatform.exception.ResourceInUseException;
 import com.example.learningplatform.exception.ResourceNotFoundException;
 import com.example.learningplatform.repository.CourseRepository;
+import com.example.learningplatform.repository.EnrollmentRepository;
 import com.example.learningplatform.repository.ProfileRepository;
 import com.example.learningplatform.repository.UserRepository;
 import java.util.List;
@@ -21,14 +23,17 @@ public class UserService {
     private final UserRepository userRepository;
     private final ProfileRepository profileRepository;
     private final CourseRepository courseRepository;
+    private final EnrollmentRepository enrollmentRepository;
 
     public UserService(
             UserRepository userRepository,
             ProfileRepository profileRepository,
-            CourseRepository courseRepository) {
+            CourseRepository courseRepository,
+            EnrollmentRepository enrollmentRepository) {
         this.userRepository = userRepository;
         this.profileRepository = profileRepository;
         this.courseRepository = courseRepository;
+        this.enrollmentRepository = enrollmentRepository;
     }
 
     public List<UserResponse> findAll() {
@@ -48,13 +53,20 @@ public class UserService {
 
     @Transactional
     public UserResponse update(Integer id, UserRequest request) {
-        User user = getUser(id);
+        User user = userRepository.findByIdForUpdate(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User", id));
         ensureEmailAvailable(request.email(), id);
         if (user.getRole() == Role.TEACHER
                 && request.role() != Role.TEACHER
                 && courseRepository.existsByTeacher_Id(id)) {
             throw new InvalidResourceStateException(
                     "Cannot change role of a teacher assigned to courses");
+        }
+        if (user.getRole() == Role.STUDENT
+                && request.role() != Role.STUDENT
+                && enrollmentRepository.existsByStudent_Id(id)) {
+            throw new ResourceInUseException(
+                    "Cannot change role of a student enrolled in courses");
         }
         user.setName(request.name());
         user.setEmail(request.email());

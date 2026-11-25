@@ -77,7 +77,12 @@ public class UserController {
                             ValidationError.class, ApiError.class
                         }))),
         @ApiResponse(responseCode = "404", description = "Пользователь не найден"),
-        @ApiResponse(responseCode = "409", description = "Email уже используется")
+        @ApiResponse(
+                responseCode = "409",
+                description = "Email уже используется или студент записан на курс",
+                content = @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = ApiError.class)))
     })
     public UserResponse update(@PathVariable Integer id, @Valid @RequestBody UserRequest request) {
         return userService.update(id, request);

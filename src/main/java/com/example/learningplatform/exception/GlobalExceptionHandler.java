@@ -24,9 +24,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(new ApiError(exception.getMessage()));
     }
 
-    @ExceptionHandler({DuplicateResourceException.class, DataIntegrityViolationException.class})
+    @ExceptionHandler({
+            DuplicateResourceException.class,
+            ResourceInUseException.class,
+            DataIntegrityViolationException.class
+    })
     public ResponseEntity<ApiError> handleConflict(RuntimeException exception) {
         String message = exception instanceof DuplicateResourceException
+                        || exception instanceof ResourceInUseException
                 ? exception.getMessage()
                 : "Resource conflicts with existing data";
         return ResponseEntity.status(HttpStatus.CONFLICT).body(new ApiError(message));
