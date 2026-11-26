@@ -47,6 +47,13 @@ public class Course {
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
     private final Set<CourseTag> courseTags = new LinkedHashSet<>();
 
+    @OneToMany(
+            mappedBy = "course",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY)
+    private final Set<Module> modules = new LinkedHashSet<>();
+
     protected Course() {
     }
 
@@ -119,6 +126,10 @@ public class Course {
 
     public Set<CourseTag> getCourseTags() {
         return courseTags;
+    }
+
+    public Set<Module> getModules() {
+        return modules;
     }
 
     public void replaceTags(Iterable<Tag> tags) {

@@ -57,6 +57,16 @@ class OpenApiDocumentationTests {
                 "/api/tags/{id}",
                 "/api/courses",
                 "/api/courses/{id}",
+                "/api/courses/{id}/structure",
+                "/api/courses/{courseId}/modules",
+                "/api/modules/{id}",
+                "/api/modules/{moduleId}/lessons",
+                "/api/lessons/{id}",
+                "/api/lessons/{lessonId}/assignments",
+                "/api/assignments/{id}",
+                "/api/assignments/{assignmentId}/submissions",
+                "/api/submissions/{id}",
+                "/api/submissions/{id}/grade",
                 "/api/course-tags",
                 "/api/enrollments",
                 "/api/enrollments/{id}",
@@ -72,7 +82,7 @@ class OpenApiDocumentationTests {
                 .toList();
 
         assertThat(paths).containsKeys(catalogPaths.toArray(String[]::new));
-        assertThat(operations).hasSize(36);
+        assertThat(operations).hasSize(56);
         assertThat(operations).allSatisfy(operation -> {
             assertThat(operation.get("summary")).as("operation summary").isNotNull();
             assertThat(operation.get("description")).as("operation description").isNotNull();
@@ -173,5 +183,36 @@ class OpenApiDocumentationTests {
         assertThat((String) JsonPath.parse(document).read(
                 "$.paths['/api/course-tags'].get.responses['200'].content['*/*'].schema.items['$ref']"))
                 .isEqualTo("#/components/schemas/CourseTagResponse");
+    }
+
+    @Test
+    void documentsAssignmentAndSubmissionSchemas() throws Exception {
+        String document = mockMvc.perform(get("/v3/api-docs"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString(StandardCharsets.UTF_8);
+
+        assertThat((String) JsonPath.parse(document).read(
+                "$.paths['/api/lessons/{lessonId}/assignments'].post.requestBody.content['application/json'].schema['$ref']"))
+                .isEqualTo("#/components/schemas/AssignmentRequest");
+        assertThat((String) JsonPath.parse(document).read(
+                "$.paths['/api/lessons/{lessonId}/assignments'].post.responses['201'].content['*/*'].schema['$ref']"))
+                .isEqualTo("#/components/schemas/AssignmentResponse");
+        assertThat((String) JsonPath.parse(document).read(
+                "$.paths['/api/assignments/{assignmentId}/submissions'].post.requestBody.content['application/json'].schema['$ref']"))
+                .isEqualTo("#/components/schemas/SubmissionRequest");
+        assertThat((String) JsonPath.parse(document).read(
+                "$.paths['/api/assignments/{assignmentId}/submissions'].post.responses['201'].content['*/*'].schema['$ref']"))
+                .isEqualTo("#/components/schemas/SubmissionResponse");
+        assertThat((String) JsonPath.parse(document).read(
+                "$.paths['/api/submissions/{id}/grade'].put.requestBody.content['application/json'].schema['$ref']"))
+                .isEqualTo("#/components/schemas/GradeSubmissionRequest");
+        assertThat((String) JsonPath.parse(document).read(
+                "$.paths['/api/submissions/{id}/grade'].put.responses['200'].content['*/*'].schema['$ref']"))
+                .isEqualTo("#/components/schemas/SubmissionResponse");
+        assertThat((String) JsonPath.parse(document).read(
+                "$.paths['/api/assignments/{assignmentId}/submissions'].post.responses['409'].content['*/*'].schema['$ref']"))
+                .isEqualTo("#/components/schemas/ApiError");
     }
 }

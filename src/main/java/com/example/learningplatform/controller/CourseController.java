@@ -2,9 +2,11 @@ package com.example.learningplatform.controller;
 
 import com.example.learningplatform.dto.CourseRequest;
 import com.example.learningplatform.dto.CourseResponse;
+import com.example.learningplatform.dto.CourseStructureResponse;
 import com.example.learningplatform.exception.ApiError;
 import com.example.learningplatform.exception.ValidationError;
 import com.example.learningplatform.service.CourseService;
+import com.example.learningplatform.service.CourseStructureService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -30,9 +32,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class CourseController {
 
     private final CourseService courseService;
+    private final CourseStructureService courseStructureService;
 
-    public CourseController(CourseService courseService) {
+    public CourseController(
+            CourseService courseService, CourseStructureService courseStructureService) {
         this.courseService = courseService;
+        this.courseStructureService = courseStructureService;
     }
 
     @GetMapping
@@ -55,6 +60,23 @@ public class CourseController {
     })
     public CourseResponse findById(@PathVariable Integer id) {
         return courseService.findById(id);
+    }
+
+    @GetMapping("/{id}/structure")
+    @Operation(
+            summary = "Получить структуру курса",
+            description = "Возвращает модули курса и уроки каждого модуля")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Структура курса получена"),
+        @ApiResponse(
+                responseCode = "404",
+                description = "Курс не найден",
+                content = @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = ApiError.class)))
+    })
+    public CourseStructureResponse findStructure(@PathVariable Integer id) {
+        return courseStructureService.findByCourseId(id);
     }
 
     @PostMapping
@@ -120,7 +142,9 @@ public class CourseController {
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Удалить курс", description = "Удаляет курс и его связи с тегами")
+    @Operation(
+            summary = "Удалить курс",
+            description = "Удаляет курс, его связи с тегами, модули и уроки")
     @ApiResponses({
         @ApiResponse(responseCode = "204", description = "Курс удалён"),
         @ApiResponse(
