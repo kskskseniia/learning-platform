@@ -182,6 +182,15 @@ Copy-Item .env.example .env
 
 Docker Desktop должен быть запущен: интеграционные тесты поднимают реальный PostgreSQL через Testcontainers.
 
+Всего: **119 тестов**.
+
+- **18 unit-тестов** без Spring context: отображения `User`, `Profile`, `Category`, `Tag` и `Quiz`.
+- **101 интеграционный тест** со Spring Boot и PostgreSQL:
+  - REST API и бизнес-правила — 66;
+  - repositories, ограничения БД, demo-data и LAZY-поведение — 27;
+  - OpenAPI-контракт — 7;
+  - запуск application context — 1.
+
 ```powershell
 .\mvnw.cmd test
 ```
