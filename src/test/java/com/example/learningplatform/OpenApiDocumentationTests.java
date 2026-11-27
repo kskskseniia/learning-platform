@@ -72,7 +72,11 @@ class OpenApiDocumentationTests {
                 "/api/enrollments/{id}",
                 "/api/enrollments/{id}/status",
                 "/api/course-reviews",
-                "/api/course-reviews/{id}");
+                "/api/course-reviews/{id}",
+                "/api/analytics/students/{studentId}",
+                "/api/analytics/courses/{courseId}",
+                "/api/analytics/quizzes/{quizId}",
+                "/api/analytics/courses/{courseId}/leaderboard");
         Set<String> httpMethods = Set.of("get", "post", "put", "delete");
         List<Map<String, Object>> operations = catalogPaths.stream()
                 .map(paths::get)
@@ -82,7 +86,7 @@ class OpenApiDocumentationTests {
                 .toList();
 
         assertThat(paths).containsKeys(catalogPaths.toArray(String[]::new));
-        assertThat(operations).hasSize(56);
+        assertThat(operations).hasSize(60);
         assertThat(operations).allSatisfy(operation -> {
             assertThat(operation.get("summary")).as("operation summary").isNotNull();
             assertThat(operation.get("description")).as("operation description").isNotNull();

@@ -155,8 +155,16 @@ Copy-Item .env.example .env
 | DELETE | `/api/quizzes/{id}?teacherId={teacherId}` | Удалить Quiz до первой попытки |
 | GET | `/api/quizzes/{quizId}/submissions?teacherId={teacherId}` | Получить результаты Quiz |
 | POST | `/api/quizzes/{quizId}/submissions` | Пройти Quiz и сохранить результат |
+| GET | `/api/analytics/students/{studentId}` | Получить успеваемость студента по всем курсам |
+| GET | `/api/analytics/courses/{courseId}` | Получить сводную статистику курса |
+| GET | `/api/analytics/quizzes/{quizId}` | Получить статистику попыток Quiz |
+| GET | `/api/analytics/courses/{courseId}/leaderboard` | Получить рейтинг студентов курса |
 
 Учебный контракт не включает authentication/authorization framework. Идентификаторы преподавателя и студента передаются явно в запросах; сервис проверяет роли, владение курсом и активную запись.
+
+### Аналитика
+
+Рейтинг строится отдельно для каждого курса. Средний балл за задания нормализуется относительно `maxScore`; для каждого Quiz учитывается лучшая попытка студента. Итоговый балл — среднее доступных компонентов. При равенстве выше студент с большим количеством завершённых активностей.
 
 ## Ключевые бизнес-правила
 
@@ -183,9 +191,10 @@ Focused-примеры:
 ```powershell
 .\mvnw.cmd -Dtest=LazyLoadingTests test
 .\mvnw.cmd -Dtest=QuizApiTests,QuizDatabaseTests,QuizMappingTests test
+.\mvnw.cmd -Dtest=AnalyticsApiTests test
 ```
 
-Тесты покрывают CRUD, валидацию, ограничения БД, каскады, права по учебному контракту, дедлайны, оценивание, course structure, Quiz, OpenAPI и LAZY-поведение.
+Тесты покрывают CRUD, валидацию, ограничения БД, каскады, права по учебному контракту, дедлайны, оценивание, course structure, Quiz, аналитику, OpenAPI и LAZY-поведение.
 
 ## Flyway и профили
 
