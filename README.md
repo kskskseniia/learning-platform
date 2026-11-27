@@ -19,25 +19,24 @@
 
 В проекте 16 JPA-сущностей:
 
-- `User`, `Profile`
-- `Category`, `Tag`, `Course`, `CourseTag`
-- `Module`, `Lesson`
-- `Assignment`, `Submission`
-- `Enrollment`, `CourseReview`
-- `Quiz`, `Question`, `AnswerOption`, `QuizSubmission`
-
-Основные отношения:
-
-- `User 1 — 0..1 Profile`
-- `Category 1 — N Course`
-- `User(TEACHER) 1 — N Course`
-- `Course N — M Tag` через явную сущность `CourseTag`
-- `Course 1 — N Module 1 — N Lesson`
-- `Lesson 1 — N Assignment 1 — N Submission`
-- `User(STUDENT) N — M Course` через `Enrollment`
-- `Course 1 — N CourseReview`
-- `Module 1 — 0..1 Quiz 1 — N Question 1 — N AnswerOption`
-- `Quiz 1 — N QuizSubmission`
+| Сущность | Связи |
+|---|---|
+| `User` | 1-1 `Profile`; 1-M `Course` (преподаватель), `Enrollment`, `Submission`, `CourseReview`, `QuizSubmission` |
+| `Profile` | 1-1 `User` |
+| `Category` | 1-M `Course` |
+| `Tag` | 1-M `CourseTag`; связь M-M с `Course` через `CourseTag` |
+| `Course` | M-1 `Category`, `User` (преподаватель); 1-M `CourseTag`, `Module`, `Enrollment`, `CourseReview` |
+| `CourseTag` | M-1 `Course`, `Tag`; уникальная пара курс-тег |
+| `Module` | M-1 `Course`; 1-M `Lesson`; 1-1 `Quiz` |
+| `Lesson` | M-1 `Module`; 1-M `Assignment` |
+| `Assignment` | M-1 `Lesson`; 1-M `Submission` |
+| `Submission` | M-1 `Assignment`, `User` (студент); уникальная пара студент-задание |
+| `Enrollment` | M-1 `User` (студент), `Course`; уникальная пара студент-курс |
+| `CourseReview` | M-1 `User` (студент), `Course` |
+| `Quiz` | 1-1 `Module`; 1-M `Question`, `QuizSubmission` |
+| `Question` | M-1 `Quiz`; 1-M `AnswerOption` |
+| `AnswerOption` | M-1 `Question` |
+| `QuizSubmission` | M-1 `Quiz`, `User` (студент) |
 
 Все ассоциации загружаются лениво. `spring.jpa.open-in-view=false`; работа с ассоциациями выполняется внутри сервисных транзакций. Тест `LazyLoadingTests` отдельно показывает `LazyInitializationException` после закрытия транзакции и корректную загрузку структуры через сервис.
 
@@ -89,24 +88,73 @@ Copy-Item .env.example .env
 
 Полное интерактивное описание запросов, DTO, кодов ответа и ошибок находится в Swagger UI.
 
-Основные группы маршрутов:
+### Полный список эндпоинтов
 
-| Ресурс | Маршруты |
-|---|---|
-| Users | CRUD `/api/users` |
-| Profiles | CRUD `/api/profiles` |
-| Categories | CRUD `/api/categories` |
-| Tags | CRUD `/api/tags` |
-| Courses | CRUD `/api/courses`, `GET /api/courses/{id}/structure` |
-| Course tags | `GET /api/course-tags` |
-| Modules | `/api/courses/{courseId}/modules`, `/api/modules/{id}` |
-| Lessons | `/api/modules/{moduleId}/lessons`, `/api/lessons/{id}` |
-| Assignments | `/api/lessons/{lessonId}/assignments`, `/api/assignments/{id}` |
-| Submissions | `/api/assignments/{assignmentId}/submissions`, `/api/submissions/{id}`, `PUT /api/submissions/{id}/grade` |
-| Enrollments | `/api/enrollments`, `PUT /api/enrollments/{id}/status` |
-| Reviews | CRUD `/api/course-reviews` |
-| Quizzes | `/api/modules/{moduleId}/quizzes`, `/api/quizzes/{id}` |
-| Quiz attempts | `POST/GET /api/quizzes/{quizId}/submissions` |
+| Метод | Путь | Описание |
+|---|---|---|
+| GET | `/api/users` | Получить всех пользователей |
+| GET | `/api/users/{id}` | Получить пользователя |
+| POST | `/api/users` | Создать пользователя |
+| PUT | `/api/users/{id}` | Обновить пользователя |
+| DELETE | `/api/users/{id}` | Удалить пользователя |
+| GET | `/api/profiles` | Получить все профили |
+| GET | `/api/profiles/{id}` | Получить профиль |
+| POST | `/api/profiles` | Создать профиль пользователя |
+| PUT | `/api/profiles/{id}` | Обновить профиль |
+| DELETE | `/api/profiles/{id}` | Удалить профиль |
+| GET | `/api/categories` | Получить все категории |
+| GET | `/api/categories/{id}` | Получить категорию |
+| POST | `/api/categories` | Создать категорию |
+| PUT | `/api/categories/{id}` | Обновить категорию |
+| DELETE | `/api/categories/{id}` | Удалить категорию |
+| GET | `/api/tags` | Получить все теги |
+| GET | `/api/tags/{id}` | Получить тег |
+| POST | `/api/tags` | Создать тег |
+| PUT | `/api/tags/{id}` | Обновить тег |
+| DELETE | `/api/tags/{id}` | Удалить тег |
+| GET | `/api/courses` | Получить все курсы |
+| GET | `/api/courses/{id}` | Получить курс |
+| GET | `/api/courses/{id}/structure` | Получить курс с модулями и уроками |
+| POST | `/api/courses` | Создать курс и назначить теги |
+| PUT | `/api/courses/{id}` | Обновить курс и его теги |
+| DELETE | `/api/courses/{id}` | Удалить курс |
+| GET | `/api/course-tags` | Получить связи курсов и тегов |
+| GET | `/api/courses/{courseId}/modules` | Получить модули курса |
+| POST | `/api/courses/{courseId}/modules` | Создать модуль курса |
+| GET | `/api/modules/{id}` | Получить модуль |
+| PUT | `/api/modules/{id}` | Обновить модуль |
+| DELETE | `/api/modules/{id}` | Удалить модуль |
+| GET | `/api/modules/{moduleId}/lessons` | Получить уроки модуля |
+| POST | `/api/modules/{moduleId}/lessons` | Создать урок модуля |
+| GET | `/api/lessons/{id}` | Получить урок |
+| PUT | `/api/lessons/{id}` | Обновить урок |
+| DELETE | `/api/lessons/{id}` | Удалить урок |
+| GET | `/api/lessons/{lessonId}/assignments` | Получить задания урока |
+| POST | `/api/lessons/{lessonId}/assignments` | Создать задание |
+| GET | `/api/assignments/{id}` | Получить задание |
+| PUT | `/api/assignments/{id}` | Обновить задание |
+| DELETE | `/api/assignments/{id}` | Удалить задание |
+| GET | `/api/assignments/{assignmentId}/submissions` | Получить решения задания |
+| POST | `/api/assignments/{assignmentId}/submissions` | Отправить решение задания |
+| GET | `/api/submissions/{id}` | Получить решение |
+| PUT | `/api/submissions/{id}/grade` | Оценить решение |
+| GET | `/api/enrollments` | Получить все записи на курсы |
+| GET | `/api/enrollments/{id}` | Получить запись на курс |
+| POST | `/api/enrollments` | Записать студента на курс |
+| PUT | `/api/enrollments/{id}/status` | Изменить статус записи |
+| DELETE | `/api/enrollments/{id}` | Удалить запись на курс |
+| GET | `/api/course-reviews` | Получить все отзывы |
+| GET | `/api/course-reviews/{id}` | Получить отзыв |
+| POST | `/api/course-reviews` | Создать отзыв |
+| PUT | `/api/course-reviews/{id}` | Обновить отзыв |
+| DELETE | `/api/course-reviews/{id}` | Удалить отзыв |
+| GET | `/api/modules/{moduleId}/quizzes` | Получить Quiz модуля |
+| POST | `/api/modules/{moduleId}/quizzes` | Создать Quiz с вопросами и ответами |
+| GET | `/api/quizzes/{id}` | Получить Quiz без признаков правильных ответов |
+| PUT | `/api/quizzes/{id}` | Обновить Quiz до первой попытки |
+| DELETE | `/api/quizzes/{id}?teacherId={teacherId}` | Удалить Quiz до первой попытки |
+| GET | `/api/quizzes/{quizId}/submissions?teacherId={teacherId}` | Получить результаты Quiz |
+| POST | `/api/quizzes/{quizId}/submissions` | Пройти Quiz и сохранить результат |
 
 Учебный контракт не включает authentication/authorization framework. Идентификаторы преподавателя и студента передаются явно в запросах; сервис проверяет роли, владение курсом и активную запись.
 
