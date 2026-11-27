@@ -186,6 +186,40 @@ class OpenApiDocumentationTests {
     }
 
     @Test
+    void documentsQuizOperationsWithoutExposingCorrectAnswers() throws Exception {
+        String document = mockMvc.perform(get("/v3/api-docs"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString(StandardCharsets.UTF_8);
+        List<String> quizOperations = List.of(
+                "$.paths['/api/modules/{moduleId}/quizzes'].post",
+                "$.paths['/api/modules/{moduleId}/quizzes'].get",
+                "$.paths['/api/quizzes/{id}'].get",
+                "$.paths['/api/quizzes/{id}'].put",
+                "$.paths['/api/quizzes/{id}'].delete",
+                "$.paths['/api/quizzes/{quizId}/submissions'].get",
+                "$.paths['/api/quizzes/{quizId}/submissions'].post");
+
+        assertThat(quizOperations).allSatisfy(path -> {
+            Map<String, Object> operation = JsonPath.parse(document).read(path);
+            assertThat(operation.get("summary")).as(path + " summary").isNotNull();
+            assertThat(operation.get("description")).as(path + " description").isNotNull();
+            assertThat((Map<?, ?>) operation.get("responses"))
+                    .as(path + " responses")
+                    .isNotEmpty();
+        });
+        assertThat((Map<String, Object>) JsonPath.parse(document).read(
+                        "$.components.schemas.AnswerOptionResponse.properties"))
+                .containsKeys("id", "text")
+                .doesNotContainKey("correct");
+        assertThat((String) JsonPath.parse(document).read(
+                        "$.paths['/api/quizzes/{quizId}/submissions'].post"
+                                + ".requestBody.content['application/json'].schema['$ref']"))
+                .isEqualTo("#/components/schemas/TakeQuizRequest");
+    }
+
+    @Test
     void documentsAssignmentAndSubmissionSchemas() throws Exception {
         String document = mockMvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())

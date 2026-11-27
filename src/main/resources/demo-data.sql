@@ -110,6 +110,28 @@ INSERT INTO course_review (
 )
 ON CONFLICT DO NOTHING;
 
+-- Quiz with two question types and one completed attempt
+INSERT INTO quiz (id, module_id, title, time_limit) VALUES
+    (1, 1, 'Проверка знаний по основам ORM', 20)
+ON CONFLICT DO NOTHING;
+
+INSERT INTO question (id, quiz_id, text, type) VALUES
+    (1, 1, 'Какая аннотация объявляет JPA-сущность?', 'SINGLE_CHOICE'),
+    (2, 1, 'Какие варианты относятся к типам связей JPA?', 'MULTIPLE_CHOICE')
+ON CONFLICT DO NOTHING;
+
+INSERT INTO answer_option (id, question_id, text, is_correct) VALUES
+    (1, 1, '@Entity', TRUE),
+    (2, 1, '@Service', FALSE),
+    (3, 2, '@OneToMany', TRUE),
+    (4, 2, '@ManyToOne', TRUE),
+    (5, 2, '@RestController', FALSE)
+ON CONFLICT DO NOTHING;
+
+INSERT INTO quiz_submission (id, quiz_id, student_id, score, taken_at) VALUES
+    (1, 1, 6, 100, CURRENT_TIMESTAMP)
+ON CONFLICT DO NOTHING;
+
 -- Keep identity sequences ahead of explicit IDs
 SELECT setval(pg_get_serial_sequence('users', 'id'), (SELECT COALESCE(MAX(id), 1) FROM users));
 SELECT setval(pg_get_serial_sequence('profile', 'id'), (SELECT COALESCE(MAX(id), 1) FROM profile));
@@ -122,5 +144,9 @@ SELECT setval(pg_get_serial_sequence('assignment', 'id'), (SELECT COALESCE(MAX(i
 SELECT setval(pg_get_serial_sequence('enrollment', 'id'), (SELECT COALESCE(MAX(id), 1) FROM enrollment));
 SELECT setval(pg_get_serial_sequence('submission', 'id'), (SELECT COALESCE(MAX(id), 1) FROM submission));
 SELECT setval(pg_get_serial_sequence('course_review', 'id'), (SELECT COALESCE(MAX(id), 1) FROM course_review));
+SELECT setval(pg_get_serial_sequence('quiz', 'id'), (SELECT COALESCE(MAX(id), 1) FROM quiz));
+SELECT setval(pg_get_serial_sequence('question', 'id'), (SELECT COALESCE(MAX(id), 1) FROM question));
+SELECT setval(pg_get_serial_sequence('answer_option', 'id'), (SELECT COALESCE(MAX(id), 1) FROM answer_option));
+SELECT setval(pg_get_serial_sequence('quiz_submission', 'id'), (SELECT COALESCE(MAX(id), 1) FROM quiz_submission));
 
 COMMIT;
